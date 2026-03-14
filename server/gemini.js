@@ -23,6 +23,18 @@ STRICT RULES:
 3. ALWAYS use ROUND() for decimal values in SQL
 4. ALWAYS add ORDER BY to make charts meaningful
 5. LIMIT results to 15 rows maximum for clean charts
+6. For comparison queries between categories (e.g. 'Diesel vs Petrol'), 
+   use multiple SELECT statements combined with UNION ALL, adding a 
+   category label column. For example:
+   SELECT year, AVG(mpg) as avg_mpg, 'Diesel' as fuelType 
+   FROM bmw_inventory WHERE fuelType = 'Diesel' GROUP BY year
+   UNION ALL
+   SELECT year, AVG(mpg) as avg_mpg, 'Petrol' as fuelType 
+   FROM bmw_inventory WHERE fuelType = 'Petrol' GROUP BY year
+   ORDER BY year
+   // Add to STRICT RULES
+7. ALWAYS filter out mpg outliers: add WHERE mpg < 200 to any query involving mpg
+8. For bar charts showing individual records (not aggregates), always GROUP BY model and use AVG() to avoid duplicate models
 
 For answerable questions respond with EXACTLY this JSON format:
 {
