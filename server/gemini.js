@@ -35,6 +35,9 @@ STRICT RULES:
    // Add to STRICT RULES
 7. ALWAYS filter out mpg outliers: add WHERE mpg < 200 to any query involving mpg
 8. For bar charts showing individual records (not aggregates), always GROUP BY model and use AVG() to avoid duplicate models
+9. For pie charts, ALWAYS name the label column the same as the grouping column 
+   (e.g. SELECT fuelType, COUNT(*) AS count — xKey should be "fuelType", yKey should be "count")
+   Never use generic names like "category" or "label"
 
 For answerable questions respond with EXACTLY this JSON format:
 {
