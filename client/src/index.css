@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    --primary: oklch(65.6% 0.241 354.308);
+    --placeholder: oklch(70% 0.02 260);
+    --primary-hover: oklch(72% 0.241 354.308);
+    --chart: oklch(72% 0.20 354.308);
+    --chart-hover: oklch(65.6% 0.241 354.308);
+    --chart-soft: oklch(72% 0.20 354.308 / 0.15);
+
+    /* for insight card */
+    --surface: oklch(20% 0.02 260);
+    /* dark background */
+    --surface-border: oklch(30% 0.03 260);
+    /* subtle border */
+    --text-muted: oklch(70% 0.02 260);
+    /* secondary text */
+}

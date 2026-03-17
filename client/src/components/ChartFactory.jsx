@@ -19,6 +19,7 @@ import {
 } from "recharts";
 
 const COLORS = [
+  "#f6339a",
   "#3b82f6",
   "#10b981",
   "#f59e0b",
@@ -73,7 +74,7 @@ export default function ChartFactory({ chartType, data, xKey, yKey, title }) {
         return (
           <BarChart {...commonProps}>
             {commonAxis}
-            <Bar dataKey={yKey} fill="#3b82f6" radius={[4, 4, 0, 0]} />
+            <Bar dataKey={yKey} fill="var(--chart)" radius={[4, 4, 0, 0]} />
           </BarChart>
         );
 
@@ -135,9 +136,9 @@ export default function ChartFactory({ chartType, data, xKey, yKey, title }) {
             <Line
               type="monotone"
               dataKey={yKey}
-              stroke="#3b82f6"
+              stroke="var(--chart-hover)"
               strokeWidth={2}
-              dot={{ fill: "#3b82f6", r: 4 }}
+              dot={{ fill: "var(--chart-hover)", r: 4 }}
               activeDot={{ r: 6 }}
             />
           </LineChart>
@@ -150,8 +151,8 @@ export default function ChartFactory({ chartType, data, xKey, yKey, title }) {
             <Area
               type="monotone"
               dataKey={yKey}
-              stroke="#3b82f6"
-              fill="#1d4ed8"
+              stroke="var(--chart-hover)"
+              fill="var(--chart)"
               fillOpacity={0.3}
               strokeWidth={2}
             />
@@ -205,7 +206,11 @@ export default function ChartFactory({ chartType, data, xKey, yKey, title }) {
               }}
               formatter={(value, name) => [value, name === "x" ? xKey : yKey]}
             />
-            <Scatter data={scatterData} fill="#3b82f6" fillOpacity={0.7} />
+            <Scatter
+              data={scatterData}
+              fill="var(--chart-hover)"
+              fillOpacity={0.7}
+            />
           </ScatterChart>
         );
       }

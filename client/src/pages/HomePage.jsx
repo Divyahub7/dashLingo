@@ -1,14 +1,34 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowRight, BarChart2, TrendingUp, PieChart } from "lucide-react";
 
 const EXAMPLE_QUERIES = [
-  "Show me the average price of each BMW model",
-  "Compare average mpg of Diesel vs Petrol cars by year from 2016 to 2020",
-  "Show top 5 most fuel efficient automatic cars under £20,000",
+  {
+    icon: <BarChart2 size={20} />,
+    text: "Show me the average price of each model",
+  },
+  {
+    icon: <TrendingUp size={20} />,
+    text: "Compare average mpg of Diesel vs Petrol cars by year",
+  },
+  {
+    icon: <PieChart size={20} />,
+    text: "Show distribution of fuel types in the inventory",
+  },
+];
+
+const FEATURES = [
+  "Natural language queries",
+  "Auto chart selection",
+  "AI-generated insights",
+  "SQL transparency",
+  "Chat follow-up",
+  "CSV upload",
 ];
 
 export default function HomePage() {
   const [prompt, setPrompt] = useState("");
+  const [focused, setFocused] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = () => {
@@ -21,58 +41,118 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center px-4">
-      {/* Logo */}
-      <div className="mb-8 text-center">
-        <h1 className="text-5xl font-bold text-white mb-2">
-          Dash<span className="text-blue-500">Lingo</span>
-        </h1>
-        <p className="text-gray-400 text-lg">
-          Ask anything about BMW inventory. Get instant charts.
-        </p>
-      </div>
+    <div className="min-h-screen flex flex-col bg-zinc-950">
+      {/* Nav */}
+      <nav className="flex items-center justify-between px-8 py-5 border-b border-zinc-800">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0">
+            <BarChart2 size={14} color="#09090b" strokeWidth={2.5} />
+          </div>
+          <span className="text-white text-base font-bold tracking-tight">
+            DashLingo
+          </span>
+        </div>
 
-      {/* Input Box */}
-      <div className="w-full max-w-2xl">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="e.g. Show me average price by BMW model..."
-            className="flex-1 bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-xl px-5 py-4 text-base focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          />
-          <button
-            onClick={handleSubmit}
-            disabled={!prompt.trim()}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium px-6 py-4 rounded-xl transition-colors"
+        <span className="text-zinc-400 text-sm">
+          Conversational BI Dashboard
+        </span>
+      </nav>
+
+      {/* Hero */}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-20">
+        {/* Badge */}
+        <div className="mb-8 flex items-center gap-2 px-4 py-1.5 rounded-full border border-zinc-700 bg-zinc-900">
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-zinc-300 text-sm font-medium">
+            Powered by Gemini AI
+          </span>
+        </div>
+
+        {/* Heading */}
+        <h1 className="text-center mb-4 text-6xl text-white font-bold tracking-tight leading-tight">
+          Ask anything.
+          <br />
+          <span className="text-[oklch(65.6%_0.241_354.308)]">
+            Get instant charts.
+          </span>
+        </h1>
+
+        {/* Subtitle */}
+        <p className="text-center mb-10 max-w-lg text-zinc-300 text-lg leading-relaxed">
+          generate plain english to useful insights...
+        </p>
+
+        {/* Input */}
+        <div className="w-full max-w-2xl mb-6">
+          <div
+            className={`flex items-center rounded-2xl bg-zinc-900 transition-all duration-200 ${
+              focused
+                ? "ring-2 ring-blue-500 border border-blue-500"
+                : "border border-zinc-700"
+            }`}
           >
-            Ask →
-          </button>
+            <input
+              type="text"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              placeholder="e.g. Show average price by model..."
+              className="flex-1 bg-transparent outline-none text-white text-base px-5 py-4 placeholder:text-placeholder"
+            />
+            <button
+              onClick={handleSubmit}
+              disabled={!prompt.trim()}
+              className={`m-2 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-150 ${
+                prompt.trim()
+                  ? "bg-primary hover:bg-primary-500 text-white cursor-pointer"
+                  : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+              }`}
+            >
+              Ask <ArrowRight size={14} />
+            </button>
+          </div>
         </div>
 
         {/* Example queries */}
-        <div className="mt-6">
-          <p className="text-gray-500 text-sm mb-3">Try these:</p>
+        <div className="w-full max-w-2xl mb-12">
+          <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest mb-3">
+            Try these
+          </p>
           <div className="flex flex-col gap-2">
             {EXAMPLE_QUERIES.map((q, i) => (
               <button
                 key={i}
-                onClick={() => setPrompt(q)}
-                className="text-left text-sm text-gray-400 hover:text-blue-400 bg-gray-800 hover:bg-gray-750 border border-gray-700 hover:border-blue-500 rounded-lg px-4 py-3 transition-all"
+                onClick={() => setPrompt(q.text)}
+                className="flex items-center gap-5 px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 hover:bg-zinc-800 text-zinc-300 hover:text-white text-base text-left transition-all duration-150"
               >
-                {q}
+                <span className="text-primary shrink-0">{q.icon}</span>
+                {q.text}
               </button>
             ))}
           </div>
         </div>
-      </div>
+
+        {/* Feature pills */}
+        <div className="flex flex-wrap gap-2 justify-center">
+          {FEATURES.map((f, i) => (
+            <span
+              key={i}
+              className="px-3.5 py-2 rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300 text-sm font-medium"
+            >
+              {f}
+            </span>
+          ))}
+        </div>
+      </main>
 
       {/* Footer */}
-      <p className="mt-12 text-gray-600 text-sm">
-        Powered by Gemini AI · BMW Vehicle Inventory · 10,782 records
-      </p>
+      <footer className="px-8 py-4 border-t border-zinc-800 flex items-center justify-center">
+        <span className="text-zinc-500 text-xs">
+          Upload any CSV · Ask any question · Get instant charts
+        </span>
+      </footer>
     </div>
   );
 }

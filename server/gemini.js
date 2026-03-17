@@ -23,21 +23,20 @@ STRICT RULES:
 3. ALWAYS use ROUND() for decimal values in SQL
 4. ALWAYS add ORDER BY to make charts meaningful
 5. LIMIT results to 15 rows maximum for clean charts
-6. For comparison queries between categories (e.g. 'Diesel vs Petrol'), 
-   use multiple SELECT statements combined with UNION ALL, adding a 
+6. For comparison queries between categories (e.g. 'Diesel vs Petrol'),
+   use multiple SELECT statements combined with UNION ALL, adding a
    category label column. For example:
-   SELECT year, AVG(mpg) as avg_mpg, 'Diesel' as fuelType 
+   SELECT year, AVG(mpg) as avg_mpg, 'Diesel' as fuelType
    FROM bmw_inventory WHERE fuelType = 'Diesel' GROUP BY year
    UNION ALL
-   SELECT year, AVG(mpg) as avg_mpg, 'Petrol' as fuelType 
+   SELECT year, AVG(mpg) as avg_mpg, 'Petrol' as fuelType
    FROM bmw_inventory WHERE fuelType = 'Petrol' GROUP BY year
    ORDER BY year
-   // Add to STRICT RULES
 7. ALWAYS filter out mpg outliers: add WHERE mpg < 200 to any query involving mpg
-8. For bar charts showing individual records (not aggregates), always GROUP BY model and use AVG() to avoid duplicate models
-9. For pie charts, ALWAYS name the label column the same as the grouping column 
-   (e.g. SELECT fuelType, COUNT(*) AS count — xKey should be "fuelType", yKey should be "count")
-   Never use generic names like "category" or "label"
+8. For bar charts showing individual records (not aggregates), always GROUP BY model and use AVG()
+9. For pie charts, ALWAYS name the label column the same as the grouping column
+10. If the user says "now", "also", "filter this", "change to", "only show", or refers to
+    a previous chart — refine the previous SQL query rather than starting fresh
 
 For answerable questions respond with EXACTLY this JSON format:
 {
@@ -60,28 +59,44 @@ For unanswerable questions respond with EXACTLY:
 { "error": "I cannot answer this with the available BMW inventory data. Try asking about price, mileage, mpg, fuel type, transmission, or model comparisons." }
 `;
 
-export async function askGemini(userPrompt) {
+export async function askGemini(userPrompt, conversationHistory = []) {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     systemInstruction: SYSTEM_PROMPT,
   });
 
-  const result = await model.generateContent(userPrompt);
-  let text = result.response.text();
+  // If there's conversation history use chat mode
+  // Otherwise use simple generateContent (cheaper + cached)
+  if (conversationHistory.length === 0) {
+    const result = await model.generateContent(userPrompt);
+    let text = result.response.text();
+    text = text.replace(/```json|```/g, "").trim();
+    try {
+      return { success: true, data: JSON.parse(text) };
+    } catch {
+      return {
+        success: false,
+        error: "Gemini returned invalid JSON",
+        raw: text,
+      };
+    }
+  }
 
-  // Strip markdown fences if Gemini adds them
+  // Chat mode for follow-up queries
+  const chat = model.startChat({
+    history: conversationHistory.map((entry) => ({
+      role: entry.role,
+      parts: [{ text: entry.text }],
+    })),
+  });
+
+  const result = await chat.sendMessage(userPrompt);
+  let text = result.response.text();
   text = text.replace(/```json|```/g, "").trim();
 
   try {
-    return {
-      success: true,
-      data: JSON.parse(text),
-    };
-  } catch (e) {
-    return {
-      success: false,
-      error: "Gemini returned invalid JSON",
-      raw: text,
-    };
+    return { success: true, data: JSON.parse(text) };
+  } catch {
+    return { success: false, error: "Gemini returned invalid JSON", raw: text };
   }
 }
