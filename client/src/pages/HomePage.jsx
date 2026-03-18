@@ -24,7 +24,7 @@ const FEATURES = [
   "AI-generated insights",
   "SQL transparency",
   "Chat follow-up",
-  "CSV upload",
+  // "CSV upload",
 ];
 
 export default function HomePage() {
@@ -64,12 +64,12 @@ export default function HomePage() {
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-20">
         {/* Badge */}
-        <div className="mb-8 flex items-center gap-2 px-4 py-1.5 rounded-full border border-zinc-700 bg-zinc-900">
+        {/* <div className="mb-8 flex items-center gap-2 px-4 py-1.5 rounded-full border border-zinc-700 bg-zinc-900">
           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-zinc-300 text-sm font-medium">
             Powered by Gemini AI
           </span>
-        </div>
+        </div> */}
 
         {/* Heading */}
         <h1 className="text-center mb-4 text-6xl text-white font-bold tracking-tight leading-tight">
@@ -153,7 +153,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="px-8 py-4 border-t border-zinc-800 flex items-center justify-center">
         <span className="text-zinc-500 text-xs">
-          Upload any CSV · Ask any question · Get instant charts
+          Ask any question · Get instant charts
         </span>
       </footer>
     </div>

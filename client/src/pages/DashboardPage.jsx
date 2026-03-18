@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import html2canvas from "html2canvas";
 import { Download } from "lucide-react";
+// import api from "../api";
 import {
   AlertTriangle,
   Clock,
@@ -11,6 +12,7 @@ import {
   Send,
   BarChart2,
   Plus,
+  Mic,
 } from "lucide-react";
 import { sendQuery } from "../api";
 import ChartFactory from "../components/ChartFactory";
@@ -35,6 +37,9 @@ export default function DashboardPage() {
   const [error, setError] = useState(null);
   const [conversation, setConversation] = useState([]);
   const chartRef = useRef(null);
+  // const [tableName, setTableName] = useState(null);
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
   const [history, setHistory] = useState(() => {
     try {
       const saved = localStorage.getItem("dashLingo_history");
@@ -126,8 +131,73 @@ export default function DashboardPage() {
     }
   }, []);
 
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+
+    recognition.continuous = false;
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setListening(true);
+
+    recognition.onend = () => {
+      setListening(false);
+      inputRef.current?.focus(); // optional UX
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      console.log("Voice:", transcript);
+
+      // ONLY fill input (NO auto query)
+      setPrompt(transcript);
+    };
+
+    recognition.onerror = (err) => {
+      console.error("Speech error:", err);
+      setListening(false);
+    };
+
+    recognitionRef.current = recognition;
+  }, []);
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) handleQuery();
+  };
+
+  // const handleFile = async (e) => {
+  //   const file = e.target.files[0];
+  //   if (!file) return;
+
+  //   const formData = new FormData();
+  //   formData.append("file", file);
+
+  //   try {
+  //     const res = await api.post("/api/upload", formData);
+
+  //     console.log("UPLOAD RESPONSE:", res.data);
+
+  //     if (res.data.tableName) {
+  //       setTableName(res.data.tableName);
+  //       alert("CSV uploaded successfully!");
+  //     }
+  //   } catch (err) {
+  //     console.error("UPLOAD ERROR:", err.response?.data || err.message);
+  //     alert("Upload failed");
+  //   }
+  // };
+  const startListening = () => {
+    if (!recognitionRef.current) {
+      alert("Speech not supported in this browser");
+      return;
+    }
+
+    recognitionRef.current.start();
   };
 
   const clearHistory = () => {
@@ -143,6 +213,13 @@ export default function DashboardPage() {
     inputRef.current?.focus();
   };
 
+  const deleteHistoryItem = (index) => {
+    setHistory((prev) => {
+      const updated = prev.filter((_, i) => i !== index);
+      localStorage.setItem("dashLingo_history", JSON.stringify(updated));
+      return updated;
+    });
+  };
   return (
     <div className="min-h-screen flex bg-zinc-950">
       {/* Sidebar */}
@@ -191,20 +268,30 @@ export default function DashboardPage() {
           ) : (
             <div className="flex flex-col gap-1 overflow-y-auto">
               {history.map((h, i) => (
-                <button
+                <div
                   key={i}
-                  onClick={() => handleQuery(h.prompt)}
-                  className="text-left px-2.5 py-2 rounded-lg bg-transparent hover:bg-zinc-800 text-zinc-400 hover:text-white text-xs leading-snug line-clamp-2 transition-all duration-150"
+                  className="flex items-center justify-between px-2.5 py-2 rounded-lg bg-transparent hover:bg-zinc-800 transition-all duration-150"
                 >
-                  {h.prompt}
-                </button>
+                  <button
+                    onClick={() => handleQuery(h.prompt)}
+                    className="text-left text-zinc-400 hover:text-white text-xs leading-snug line-clamp-2 flex-1"
+                  >
+                    {h.prompt}
+                  </button>
+                  <button
+                    onClick={() => deleteHistoryItem(i)}
+                    className="ml-2 text-zinc-600 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               ))}
             </div>
           )}
         </div>
 
         {/* Back */}
-        <div className="px-4 py-4 border-t border-zinc-800">
+        <div className="px-4 py-4 ">
           <button
             onClick={() => navigate("/")}
             className="flex items-center gap-2 text-zinc-500 hover:text-white text-sm transition-colors"
@@ -216,6 +303,11 @@ export default function DashboardPage() {
 
       {/* Main */}
       <div className="flex-1 flex flex-col h-screen">
+        <div className="px-8 pt-6 pb-3 ">
+          <h1 className="text-white text-xl font-bold tracking-tight">
+            DashLingo
+          </h1>
+        </div>
         {/* Scrollable chart area */}
         <div className="flex-1 overflow-y-auto p-8">
           <div className="max-w-4xl mx-auto">
@@ -260,18 +352,33 @@ export default function DashboardPage() {
                   <BarChart2 size={28} className="text-primary" />
                 </div>
                 <p className="text-zinc-300 text-xl font-semibold mb-2">
-                  Your chart will appear here
+                  Your chart will appear here...
                 </p>
-                <p className="text-zinc-500 text-sm">
+                {/* <p className="text-zinc-500 text-sm">
                   Type a question below to generate a dashboard...
-                </p>
+                </p> */}
+                <div className="flex flex-wrap gap-2 mt-6 justify-center">
+                  {[
+                    "Compare petrol vs diesel cars",
+                    "Top 5 most expensive BMW models",
+                    "Relationship between mileage and price",
+                  ].map((q, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleQuery(q)}
+                      className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg text-sm text-zinc-300 hover:text-white transition-all"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         </div>
 
         {/* Bottom input bar */}
-        <div className="border-t border-zinc-800 bg-zinc-900/80 backdrop-blur px-6 py-4">
+        <div className=" backdrop-blur px-6 py-4">
           {/* Conversation indicator */}
           {conversation.length > 0 && (
             <div className="max-w-4xl mx-auto flex items-center justify-between mb-3">
@@ -290,6 +397,24 @@ export default function DashboardPage() {
 
           {/* Input row */}
           <div className="max-w-4xl mx-auto flex gap-3 items-center">
+            {/* <input
+              type="file"
+              accept=".csv"
+              onChange={handleFile}
+              className="text-xs text-zinc-400"
+            /> */}
+            {/* MIC BUTTON */}
+
+            <button
+              onClick={startListening}
+              className={`w-12 h-11 rounded-3xl flex items-center justify-center transition-all ${
+                listening
+                  ? "bg-red-500 animate-pulse"
+                  : "bg-zinc-800 hover:bg-zinc-700"
+              }`}
+            >
+              <Mic size={16} className="text-white" />
+            </button>
             <input
               ref={inputRef}
               type="text"
@@ -297,16 +422,18 @@ export default function DashboardPage() {
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={
-                conversation.length > 0
-                  ? "Follow up — 'Now filter to only Diesel cars'..."
-                  : "Ask anything about your data..."
+                listening
+                  ? "Listening..."
+                  : conversation.length > 0
+                    ? "Follow up — 'Now filter to only Diesel cars'..."
+                    : "Ask anything about your data..."
               }
-              className="flex-1 bg-zinc-800 border border-zinc-700 focus:border-primary focus:ring-2 rounded-xl px-5 py-3 text-white text-sm placeholder:text-zinc-500 outline-none transition-all"
+              className="flex-1 bg-zinc-800 border border-zinc-700 focus:border-primary focus:ring-2 rounded-2xl px-5 py-3 text-white text-sm placeholder:text-zinc-500 outline-none transition-all"
             />
             <button
               onClick={() => handleQuery()}
               disabled={loading || !prompt.trim()}
-              className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-150 ${
+              className={`w-11 h-11 rounded-3xl flex items-center justify-center shrink-0 transition-all duration-150 ${
                 prompt.trim() && !loading
                   ? "bg-primary hover:bg-primary-hover cursor-pointer"
                   : "bg-zinc-800 cursor-not-allowed"

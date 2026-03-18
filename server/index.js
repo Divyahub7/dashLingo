@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import schemaRouter from "./routes/schema.js";
 import queryRouter from "./routes/query.js";
 import historyRouter from "./routes/history.js";
+import uploadRoute from "./routes/uploads.js";
 import mongoose from "mongoose";
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use("/api", schemaRouter);
 app.use("/api", queryRouter);
 app.use("/api", historyRouter);
+app.use("/api", uploadRoute);
 
 // Health check
 app.get("/api/health", (req, res) => {

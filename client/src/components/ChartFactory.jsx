@@ -162,8 +162,8 @@ export default function ChartFactory({ chartType, data, xKey, yKey, title }) {
       case "scatter": {
         // Recharts Scatter needs {x, y} format
         const scatterData = data.map((row) => ({
-          x: row[xKey],
-          y: row[yKey],
+          x: Number(row[xKey]),
+          y: Number(row[yKey]),
           ...row,
         }));
 
@@ -181,7 +181,8 @@ export default function ChartFactory({ chartType, data, xKey, yKey, title }) {
                 offset: -10,
                 fill: "#9ca3af",
               }}
-              domain={["auto", "auto"]}
+              domain={["dataMin", "dataMax"]}
+              ticks={scatterData.map((d) => d.x)}
             />
             <YAxis
               type="number"

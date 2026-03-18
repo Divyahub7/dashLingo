@@ -30,10 +30,40 @@ const generateInsight = (rows, xKey, yKey, geminiInsight) => {
 };
 
 router.post("/query", async (req, res) => {
-  const { prompt, sessionId } = req.body;
+  const { prompt, sessionId, tableName } = req.body;
 
   if (!prompt || prompt.trim() === "") {
     return res.status(400).json({ error: "Prompt is required!" });
+  }
+
+  const activeTable = tableName || "bmw_inventory";
+
+  const mode = activeTable === "bmw_inventory" ? "bmw" : "csv";
+
+  // CSV MODE (SAFE PREVIEW)
+  if (mode === "csv") {
+    try {
+      const rows = db.prepare(`SELECT * FROM ${activeTable} LIMIT 15`).all();
+
+      if (!rows || rows.length === 0) {
+        return res.json({ error: "Uploaded CSV is empty" });
+      }
+
+      const responseData = {
+        data: rows,
+        chartType: "bar",
+        xKey: Object.keys(rows[0])[0],
+        yKey: Object.keys(rows[0])[1],
+        title: "Preview of uploaded dataset",
+        insight: "Showing first 15 rows from uploaded CSV",
+        rowCount: rows.length,
+      };
+
+      return res.json(responseData);
+    } catch (err) {
+      console.error("CSV preview error:", err);
+      return res.status(500).json({ error: "Error reading uploaded dataset" });
+    }
   }
 
   // Check cache first
@@ -45,12 +75,14 @@ router.post("/query", async (req, res) => {
 
   try {
     const geminiResponse = await askGemini(prompt);
+    console.log(geminiResponse);
 
     if (!geminiResponse.success) {
       return res.status(500).json({ error: geminiResponse.error });
     }
 
     const geminiData = geminiResponse.data;
+    let sqlQuery = geminiData.sql.replace(/bmw_inventory/g, activeTable);
 
     if (geminiData.error) {
       await QueryHistory.create({
@@ -63,7 +95,7 @@ router.post("/query", async (req, res) => {
 
     let rows;
     try {
-      rows = db.prepare(geminiData.sql).all();
+      rows = db.prepare(sqlQuery).all();
     } catch (sqlError) {
       return res.status(200).json({
         error: `Could not run the generated query: ${sqlError.message}`,
@@ -80,7 +112,7 @@ router.post("/query", async (req, res) => {
     await QueryHistory.create({
       sessionId: sessionId || "anonymous",
       prompt,
-      sql: geminiData.sql,
+      sql: sqlQuery,
       chartType: geminiData.chartType,
       title: geminiData.title,
       insight,
@@ -94,7 +126,7 @@ router.post("/query", async (req, res) => {
       yKey: geminiData.yKey,
       title: geminiData.title,
       insight,
-      sql: geminiData.sql,
+      sql: sqlQuery,
       rowCount: rows.length,
     };
 
