@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
+import html2canvas from "html2canvas";
+import { Download } from "lucide-react";
 import {
   AlertTriangle,
   Clock,
@@ -32,6 +34,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [conversation, setConversation] = useState([]);
+  const chartRef = useRef(null);
   const [history, setHistory] = useState(() => {
     try {
       const saved = localStorage.getItem("dashLingo_history");
@@ -90,6 +93,30 @@ export default function DashboardPage() {
     },
     [prompt, conversation],
   );
+
+  const handleDownload = async () => {
+    if (!chartRef.current) return;
+
+    // temporarily force safe colors
+    const originalBg = chartRef.current.style.backgroundColor;
+    chartRef.current.style.backgroundColor = "#18181b"; // zinc-900 fallback
+
+    try {
+      const canvas = await html2canvas(chartRef.current, {
+        backgroundColor: "#18181b",
+      });
+
+      const link = document.createElement("a");
+      link.download = `${result.title || "chart"}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+
+    // restore original style
+    chartRef.current.style.backgroundColor = originalBg;
+  };
 
   useEffect(() => {
     if (location.state?.prompt && !initialPromptRan.current) {
@@ -203,13 +230,22 @@ export default function DashboardPage() {
 
             {result && !loading && (
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                <ChartFactory
-                  chartType={result.chartType}
-                  data={result.data}
-                  xKey={result.xKey}
-                  yKey={result.yKey}
-                  title={result.title}
-                />
+                <button
+                  onClick={handleDownload}
+                  className="absolute top-8 right-10 p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 transition-all"
+                >
+                  {" "}
+                  <Download size={16} className="text-zinc-300" />
+                </button>
+                <div ref={chartRef}>
+                  <ChartFactory
+                    chartType={result.chartType}
+                    data={result.data}
+                    xKey={result.xKey}
+                    yKey={result.yKey}
+                    title={result.title}
+                  />
+                </div>
                 <InsightCard
                   insight={result.insight}
                   rowCount={result.rowCount}
