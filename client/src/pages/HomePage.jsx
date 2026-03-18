@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, BarChart2, TrendingUp, PieChart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const EXAMPLE_QUERIES = [
   {
@@ -53,9 +54,11 @@ export default function HomePage() {
           </span>
         </div>
 
-        <span className="text-zinc-400 text-sm">
-          Conversational BI Dashboard
-        </span>
+        <Link to="/dashboard">
+          <span className="text-zinc-400 text-sm">
+            Conversational BI Dashboard
+          </span>
+        </Link>
       </nav>
 
       {/* Hero */}

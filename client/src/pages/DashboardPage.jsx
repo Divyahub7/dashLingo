@@ -63,11 +63,14 @@ export default function DashboardPage() {
             { role: "user", text: q },
             {
               role: "model",
-              text: JSON.stringify({
+              text: `I generated this response: ${JSON.stringify({
                 sql: data.sql,
                 chartType: data.chartType,
+                xKey: data.xKey,
+                yKey: data.yKey,
                 title: data.title,
-              }),
+                insight: data.insight,
+              })}. The SQL I used was: ${data.sql}`,
             },
           ]);
           setHistory((prev) => {
